@@ -2,7 +2,7 @@
 
 **A digital "fiado" (store-credit) ledger for neighborhood stores, with daily proofs sealed on Solana.**
 
-Live demo (mobile first): **https://lcarrenoy.github.io/ayllusol/**
+Live demo (mobile first): **https://lcarrenoy.github.io/ayllusol/** · Demo video: **https://lcarrenoy.github.io/ayllusol/demo.html**
 
 Across Peru and Latin America, millions of bodegas sell on credit to neighbors they know, tracked in
 paper notebooks. Records get lost, disputes are common, and owners don't know how much they are owed
