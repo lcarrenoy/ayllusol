@@ -429,8 +429,12 @@ catch(e){ $("#wBal").textContent = "sin conexión"; return 0; }
 }
 $("#airdrop").onclick = async ()=>{
 toast("Pidiendo SOL de prueba…");
-try{ const sig = await conn.requestAirdrop(KP.publicKey, 0.2*W.LAMPORTS_PER_SOL); await conn.confirmTransaction(sig,"confirmed"); toast("Listo: 0.2 SOL de devnet"); }
-catch(e){ toast("El faucet está limitado. Usa faucet.solana.com con tu dirección.", 4500); }
+let ok = false;
+for(const amt of [0.5, 0.1, 0.05, 0.01]){
+try{ const sig = await conn.requestAirdrop(KP.publicKey, Math.round(amt*W.LAMPORTS_PER_SOL)); await conn.confirmTransaction(sig,"confirmed"); toast(`Listo: ${amt} SOL de devnet`); ok = true; break; }
+catch(e){ await new Promise(r=>setTimeout(r,1500)); }
+}
+if(!ok) toast("El faucet está limitado. Usa faucet.solana.com con tu dirección.", 4500);
 refreshBalance();
 };
 $("#copyAddr").onclick = async ()=>{ try{ await navigator.clipboard.writeText(KP.publicKey.toBase58()); toast("Dirección copiada"); }catch{ toast(KP.publicKey.toBase58(), 6000); } };
