@@ -3,7 +3,7 @@
 Actualizado: 2026-10-12
 
 ## Estado actual
-- Web app móvil en `docs/app/` (GitHub Pages): mostrador con dictado por voz, confirmación del vecino (WhatsApp simulado), pagos FIFO, límites que crecen, dashboard (DSO, aging, semáforo) y sello diario en Solana devnet con el programa Memo + verificación.
+- Web app móvil en `index.html` (GitHub Pages): mostrador con dictado por voz, confirmación del vecino (WhatsApp simulado), pagos FIFO, límites que crecen, dashboard (DSO, aging, semáforo) y sello diario en Solana devnet con el programa Memo + verificación.
 - Raíz Merkle del navegador verificada igual a la de Python (`apps/api/ayllusol_api/ledger.py`).
 - API FastAPI en memoria con 7 pruebas.
 
