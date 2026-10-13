@@ -2,7 +2,7 @@
 
 **A digital "fiado" (store-credit) ledger for neighborhood stores, with daily proofs sealed on Solana.**
 
-Live demo (mobile first): **https://lcarrenoy.github.io/ayllusol/app/**
+Live demo (mobile first): **https://lcarrenoy.github.io/ayllusol/**
 
 Across Peru and Latin America, millions of bodegas sell on credit to neighbors they know, tracked in
 paper notebooks. Records get lost, disputes are common, and owners don't know how much they are owed
@@ -37,7 +37,8 @@ Memo format: `ayllusol:v1|store:<id>|day:<YYYY-MM-DD>|n:<entries>|root:<sha256 h
 ## Repository
 
 ```
-docs/app/            Mobile web app (static, GitHub Pages) — counter, dashboard, Solana seal
+index.html + web3.min.js   Mobile web app (GitHub Pages) — counter, dashboard, Solana seal
+ayllusol-source.zip  Full source: Python ledger core + FastAPI + tests, Anchor plan
 apps/api/            Python ledger core + FastAPI (balances, FIFO aging, DSO, Merkle root) with tests
 programs/ayllu_ledger/  Planned Anchor program (seal_day PDA per store/day) — next step
 docs/PROGRESO.md     Progress log
