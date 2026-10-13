@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AylluSol — fiado ledger</title>
+<meta name="description" content="Digital fiado ledger for neighborhood stores, with daily proofs sealed on Solana devnet.">
+<meta name="theme-color" content="#0f1420">
+<style>
+:root{
+  --bg:#0f1420; --panel:#171e2e; --panel2:#1f2840; --line:#2a3550;
+  --ink:#eef1f7; --muted:#9aa5bd; --accent:#e8a33d; --accent2:#2bc4a4;
+  --ok:#2bc48a; --warn:#e8b13d; --bad:#e8573d; --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(15,20,32,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 16px 0}
+.brand{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.brand h1{font-size:18px;margin:0;letter-spacing:.3px}
+.brand h1 span{color:var(--accent)}
+.pill{font-size:11px;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.pill.net{color:var(--accent2);border-color:var(--accent2)}
+nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 6px;font:inherit;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--accent)}
+main{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+section{display:none}section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.row{display:flex;gap:8px;align-items:center}
+.grow{flex:1}
+select,input{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);color:#1b1206;border-color:var(--accent)}
+.btn.teal{background:var(--accent2);color:#06201a;border-color:var(--accent2)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;user-select:none}
+.chip b{display:block;font-size:14px}.chip small{color:var(--muted)}
+.chip .q{display:inline-block;min-width:22px;margin-top:4px;padding:1px 6px;border-radius:99px;background:var(--accent);color:#1b1206;font-weight:700;font-size:12px}
+.chip .q:empty{display:none}
+.total{font-size:28px;font-weight:800}
+.muted{color:var(--muted)}.small{font-size:12px}
+.mic{width:56px;height:56px;border-radius:50%;padding:0;font-size:24px}
+.mic.live{background:var(--bad);border-color:var(--bad);animation:p 1s infinite}
+@keyframes p{50%{opacity:.6}}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;gap:8px;align-items:center;background:var(--panel2);border-radius:10px;padding:10px 12px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700}
+.tag.ok{background:rgba(43,196,138,.15);color:var(--ok)}
+.tag.wait{background:rgba(232,177,61,.15);color:var(--warn)}
+.tag.bad{background:rgba(232,87,61,.15);color:var(--bad)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--panel2);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:20px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:52px 1fr 72px;gap:8px;align-items:center;font-size:13px}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--accent2)}
+.bar .track{background:var(--panel2);border-radius:6px;overflow:hidden}
+.wa{background:#0b141a;border-radius:16px;padding:12px;border:1px solid #1f2c34}
+.wa .hd{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid #1f2c34;margin-bottom:10px}
+.wa .av{width:32px;height:32px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#1b1206;font-weight:800}
+.bub{background:#1f2c34;border-radius:10px;padding:10px;max-width:92%;white-space:pre-line;font-size:14px}
+.bub.me{background:#005c4b;margin-left:auto;margin-top:8px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
+a{color:var(--accent2)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 14px;border-radius:12px;max-width:90vw;display:none;z-index:9}
+.ok-big{font-size:40px;text-align:center}
+hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Ayllu<span>Sol</span> <span class="pill">Bodega Demo</span></h1>
+    <span class="pill net">Solana devnet</span>
+  </div>
+  <nav>
+    <button data-tab="counter" class="on">Mostrador</button>
+    <button data-tab="neighbors">Vecinos</button>
+    <button data-tab="dash">Dashboard</button>
+    <button data-tab="seal">Sello</button>
+  </nav>
+</header>
+
+<main>
+<!-- COUNTER -->
+<section id="counter" class="on">
+  <div class="card">
+    <h2>Nuevo fiado</h2>
+    <div class="row" style="margin-bottom:10px">
+      <select id="cust" class="grow"></select>
+      <button class="btn mic" id="mic" title="Dictar">🎤</button>
+    </div>
+    <div class="small muted" id="heard" style="min-height:18px;margin-bottom:8px">Toca 🎤 y di: “dos arroz y un aceite para Rosa”</div>
+    <div class="chips" id="chips"></div>
+    <hr>
+    <div class="row">
+      <div class="grow">
+        <div class="muted small">Total</div>
+        <div class="total" id="total">S/ 0.00</div>
+        <div class="small" id="limitInfo"></div>
+      </div>
+      <button class="btn" id="clear">Limpiar</button>
+    </div>
+    <button class="btn primary block" id="propose" style="margin-top:12px">Anotar y pedir confirmación</button>
+    <div class="small muted" style="margin-top:8px">La IA propone, el vecino confirma: nada mueve dinero sin las dos partes.</div>
+  </div>
+
+  <div class="card" id="waCard" style="display:none">
+    <h2>WhatsApp del vecino (simulado)</h2>
+    <div class="wa">
+      <div class="hd"><div class="av" id="waAv">R</div><div><b id="waName"></b><div class="small muted">vía AylluSol</div></div></div>
+      <div class="bub" id="waMsg"></div>
+      <div class="row" style="margin-top:10px;gap:6px">
+        <button class="btn teal grow" id="waOk">✓ Confirmo</button>
+        <button class="btn grow" id="waNo">No reconozco</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Registrar pago</h2>
+    <div class="row" style="margin-bottom:8px">
+      <select id="payCust" class="grow"></select>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <input id="payAmt" type="number" inputmode="decimal" step="0.10" min="0" placeholder="Monto S/">
+      <select id="payMethod"><option>Yape</option><option>Plin</option><option>Efectivo</option><option>Transferencia</option></select>
+    </div>
+    <button class="btn block" id="pay">Registrar pago (se aplica al fiado más antiguo)</button>
+  </div>
+
+  <div class="card">
+    <h2>Hoy</h2>
+    <div class="list" id="today"></div>
+  </div>
+</section>
+
+<!-- NEIGHBORS -->
+<section id="neighbors">
+  <div class="card">
+    <h2>Vecinos con cuenta</h2>
+    <div class="list" id="custList"></div>
+    <div class="small muted" style="margin-top:10px">El límite sube solo cuando el vecino paga a tiempo: crédito que crece con la confianza.</div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dash">
+  <div class="card">
+    <h2>Cartera</h2>
+    <div class="kpis">
+      <div class="kpi"><span class="small muted">Por cobrar</span><b id="kRec">—</b></div>
+      <div class="kpi"><span class="small muted">DSO 30d</span><b id="kDso">—</b></div>
+      <div class="kpi"><span class="small muted">Fiado 30d</span><b id="kSales">—</b></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Antigüedad (días vencidos)</h2>
+    <div class="bars" id="aging"></div>
+  </div>
+  <div class="card">
+    <h2>Semáforo</h2>
+    <div class="list" id="traffic"></div>
+  </div>
+</section>
+
+<!-- SEAL -->
+<section id="seal">
+  <div class="card">
+    <h2>Cierre del día</h2>
+    <div class="row"><div class="grow muted">Fecha</div><b id="sDay"></b></div>
+    <div class="row"><div class="grow muted">Movimientos confirmados</div><b id="sN"></b></div>
+    <div class="muted small" style="margin-top:8px">Raíz Merkle (SHA-256)</div>
+    <div class="mono" id="sRoot"></div>
+    <div class="small muted" style="margin-top:8px">Solo este hash va a la cadena. Ni nombres, ni montos, ni teléfonos.</div>
+  </div>
+  <div class="card">
+    <h2>Billetera de la bodega (devnet)</h2>
+    <div class="mono" id="wAddr"></div>
+    <div class="row" style="margin-top:8px"><div class="grow muted">Saldo</div><b id="wBal">—</b></div>
+    <div class="row" style="margin-top:10px;gap:6px">
+      <button class="btn grow" id="airdrop">Pedir SOL de prueba</button>
+      <button class="btn grow" id="copyAddr">Copiar dirección</button>
+    </div>
+    <div class="small muted" style="margin-top:8px">Si el airdrop falla por límite, copia la dirección y usa <a href="https://faucet.solana.com" target="_blank" rel="noopener">faucet.solana.com</a> (devnet).</div>
+  </div>
+  <button class="btn primary block" id="doSeal">⛓ Sellar el día en Solana</button>
+  <div class="card" id="sealOut" style="display:none;margin-top:12px"></div>
+  <div class="card">
+    <h2>Sellos anteriores</h2>
+    <div class="list" id="sealList"></div>
+  </div>
+  <div class="small muted" style="text-align:center;margin-top:16px">Datos de demostración inventados. <a href="#" id="reset">Reiniciar demo</a></div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="web3.min.js"></script>
+<script>
+"use strict";
+// ---------- demo data (invented) ----------
+const PRODUCTS = [
+  {id:"arroz",  name:"Arroz 1kg",   price:420, keys:["arroz"]},
+  {id:"aceite", name:"Aceite 1L",   price:950, keys:["aceite"]},
+  {id:"leche",  name:"Leche tarro", price:430, keys:["leche","tarro"]},
+  {id:"pan",    name:"Pan x5",      price:100, keys:["pan","panes"]},
+  {id:"azucar", name:"Azúcar 1kg",  price:380, keys:["azucar","azúcar"]},
+  {id:"huevos", name:"Huevos x6",   price:540, keys:["huevo","huevos"]},
+  {id:"fideo",  name:"Fideos",      price:310, keys:["fideo","fideos","tallarin","tallarín"]},
+  {id:"atun",   name:"Atún",        price:650, keys:["atun","atún"]},
+  {id:"gaseosa",name:"Gaseosa 1.5L",price:700, keys:["gaseosa"]},
+];
+const CUSTOMERS = [
+  {id:"c-rosa",   name:"Rosa Q.",        limit:15000, payDay:"sábados",  keys:["rosa"]},
+  {id:"c-julio",  name:"Don Julio",      limit:30000, payDay:"día 15",   keys:["julio"]},
+  {id:"c-huaman", name:"Familia Huamán", limit:20000, payDay:"día 30",   keys:["huaman","huamán","familia"]},
+  {id:"c-carmen", name:"Sra. Carmen",    limit:8000,  payDay:"viernes",  keys:["carmen"]},
+];
+const STORE = "bodega-demo";
+const MEMO_PROGRAM = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+const RPC = "https://api.devnet.solana.com";
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const soles = c => "S/ " + (c/100).toFixed(2);
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => iso(new Date());
+const addDays = (s,n) => { const d = new Date(s+"T12:00:00"); d.setDate(d.getDate()+n); return iso(d); };
+const daysBetween = (a,b) => Math.round((new Date(b+"T12:00:00") - new Date(a+"T12:00:00"))/86400000);
+function toast(msg, ms=2600){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toast.h); toast.h=setTimeout(()=>t.style.display="none",ms); }
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem("ayllu:"+k); return v?JSON.parse(v):d; }catch{ return d; } },
+  set(k,v){ try{ localStorage.setItem("ayllu:"+k, JSON.stringify(v)); }catch{} }
+};
+
+// ---------- ledger (append-only, mirrors apps/api/ayllusol_api/ledger.py) ----------
+let ENTRIES = store.get("entries", null);
+function seed(){
+  const t = today(); const e = []; let n = 1;
+  const add = (cid, type, cents, daysAgo, confirmed=true, note="") => {
+    const on = addDays(t, -daysAgo);
+    e.push({id:"e"+(n++), customer_id:cid, type, amount:cents, on, due: type==="charge"? addDays(on,7):null, confirmed, note});
+  };
+  add("c-rosa","charge",2350,34,true,"Arroz, aceite, leche"); add("c-rosa","payment",2350,26,true,"Yape");
+  add("c-rosa","charge",1880,12,true,"Pan, huevos, fideos"); add("c-rosa","charge",960,5,true,"Leche, pan");
+  add("c-julio","charge",6420,52,true,"Compra semanal"); add("c-julio","payment",4000,40,true,"Efectivo");
+  add("c-julio","charge",3150,20,true,"Atún, arroz, gaseosa"); add("c-julio","charge",2730,9,true,"Aceite, azúcar");
+  add("c-huaman","charge",4100,28,true,"Compra quincena"); add("c-huaman","payment",4100,15,true,"Plin");
+  add("c-huaman","charge",5200,10,true,"Compra semanal"); add("c-huaman","payment",2000,3,true,"Transferencia");
+  add("c-carmen","charge",3480,70,true,"Varios"); add("c-carmen","charge",1590,41,true,"Gaseosa, pan");
+  add("c-carmen","payment",1000,33,true,"Efectivo");
+  return e;
+}
+if(!ENTRIES){ ENTRIES = seed(); store.set("entries", ENTRIES); }
+let SEALS = store.get("seals", []);
+const save = () => store.set("entries", ENTRIES);
+const signed = e => e.type==="payment" ? -e.amount : e.amount;
+const confirmedOf = cid => ENTRIES.filter(e => e.customer_id===cid && e.confirmed);
+const balance = cid => confirmedOf(cid).reduce((s,e)=>s+signed(e),0);
+const pendingOf = cid => ENTRIES.filter(e => e.customer_id===cid && !e.confirmed && !e.rejected && e.type==="charge").reduce((s,e)=>s+e.amount,0);
+function openChargesFifo(cid){
+  const mine = confirmedOf(cid).slice().sort((a,b)=> a.on===b.on ? (+a.id.slice(1))-(+b.id.slice(1)) : (a.on<b.on?-1:1));
+  const open = []; let credit = 0;
+  for(const e of mine){
+    const v = signed(e);
+    if(v>0) open.push({id:e.id, due:e.due||e.on, remaining:v}); else credit += -v;
+    while(credit>0 && open.length){ const f=open[0]; const used=Math.min(f.remaining,credit); f.remaining-=used; credit-=used; if(f.remaining===0) open.shift(); }
+  }
+  return open.filter(c=>c.remaining>0);
+}
+const BUCKETS = [[0,7,"0-7"],[8,15,"8-15"],[16,30,"16-30"],[31,60,"31-60"],[61,null,"60+"]];
+function aging(){
+  const r = Object.fromEntries(BUCKETS.map(b=>[b[2],0])); const t = today();
+  for(const c of CUSTOMERS) for(const ch of openChargesFifo(c.id)){
+    const d = Math.max(daysBetween(ch.due,t),0);
+    for(const [lo,hi,l] of BUCKETS) if(d>=lo && (hi===null||d<=hi)){ r[l]+=ch.remaining; break; }
+  }
+  return r;
+}
+function worstDays(cid){ const t=today(); return openChargesFifo(cid).reduce((m,c)=>Math.max(m, daysBetween(c.due,t)),0); }
+function light(cid){ const d = worstDays(cid); return d>30?"bad": d>7?"wait":"ok"; }
+// limit escalation: +20% per on-time payment in the last 60 days, capped at 2x
+function effectiveLimit(c){
+  const t = today();
+  const onTime = ENTRIES.filter(e=>e.customer_id===c.id && e.type==="payment" && e.confirmed && daysBetween(e.on,t)<=60).length;
+  return Math.min(Math.round(c.limit*(1+0.2*onTime)), c.limit*2);
+}
+
+// ---------- hashing / merkle (same algorithm as Python) ----------
+const enc = new TextEncoder();
+const hex = b => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const unhex = h => new Uint8Array(h.match(/../g).map(x=>parseInt(x,16)));
+async function sha(bytes){ return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)); }
+async function entryHash(e){ return sha(enc.encode(`${e.id}|${e.customer_id}|${e.type}|${(e.amount/100).toFixed(2)}|${e.on}`)); }
+async function merkleRoot(leaves){
+  if(!leaves.length) return hex(await sha(new Uint8Array()));
+  let level = leaves.map(hex).sort();
+  while(level.length>1){
+    if(level.length%2) level.push(level[level.length-1]);
+    const next=[];
+    for(let i=0;i<level.length;i+=2){ const a=unhex(level[i]), b=unhex(level[i+1]); const c=new Uint8Array(64); c.set(a); c.set(b,32); next.push(hex(await sha(c))); }
+    level = next;
+  }
+  return level[0];
+}
+async function dailyRoot(day){
+  const es = ENTRIES.filter(e=>e.on===day && e.confirmed);
+  return {root: await merkleRoot(await Promise.all(es.map(entryHash))), n: es.length};
+}
+
+// ---------- counter ----------
+let cart = {};
+function fillSelects(){
+  const opts = CUSTOMERS.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  $("#cust").innerHTML = opts; $("#payCust").innerHTML = opts;
+}
+function renderChips(){
+  $("#chips").innerHTML = PRODUCTS.map(p=>`<div class="chip" data-id="${p.id}"><b>${p.name}</b><small>${soles(p.price)}</small><div><span class="q">${cart[p.id]||""}</span></div></div>`).join("");
+  const total = cartTotal(); $("#total").textContent = soles(total);
+  const c = CUSTOMERS.find(x=>x.id===$("#cust").value); const lim = effectiveLimit(c);
+  const used = balance(c.id) + pendingOf(c.id); const avail = lim - used;
+  $("#limitInfo").innerHTML = `Disponible de ${c.name}: <b style="color:${total>avail?'var(--bad)':'var(--ok)'}">${soles(Math.max(avail,0))}</b> <span class="muted">(límite ${soles(lim)})</span>`;
+}
+const cartTotal = () => Object.entries(cart).reduce((s,[id,q])=>s+PRODUCTS.find(p=>p.id===id).price*q,0);
+$("#chips").addEventListener("click", ev=>{ const ch=ev.target.closest(".chip"); if(!ch) return; cart[ch.dataset.id]=(cart[ch.dataset.id]||0)+1; renderChips(); });
+$("#chips").addEventListener("contextmenu", ev=>{ ev.preventDefault(); const ch=ev.target.closest(".chip"); if(!ch) return; const id=ch.dataset.id; if(cart[id]){ cart[id]--; if(!cart[id]) delete cart[id]; } renderChips(); });
+$("#clear").onclick = ()=>{ cart={}; renderChips(); };
+$("#cust").onchange = renderChips;
+
+let pendingId = null;
+$("#propose").onclick = ()=>{
+  const total = cartTotal(); if(!total){ toast("Agrega productos primero"); return; }
+  const c = CUSTOMERS.find(x=>x.id===$("#cust").value);
+  const avail = effectiveLimit(c) - balance(c.id) - pendingOf(c.id);
+  if(total>avail){ toast(`Supera el límite disponible de ${c.name} (${soles(Math.max(avail,0))})`, 3500); return; }
+  const items = Object.entries(cart).map(([id,q])=>`${q} × ${PRODUCTS.find(p=>p.id===id).name}`);
+  const t = today(); const id = "e"+(ENTRIES.reduce((m,e)=>Math.max(m,+e.id.slice(1)),0)+1);
+  ENTRIES.push({id, customer_id:c.id, type:"charge", amount:total, on:t, due:addDays(t,7), confirmed:false, note:items.join(", ")});
+  save(); pendingId = id;
+  $("#waName").textContent = c.name; $("#waAv").textContent = c.name[0];
+  $("#waMsg").textContent = `🧾 Bodega Demo anotó un fiado:\n${items.join("\n")}\nTotal: ${soles(total)}\nTu día de pago: ${c.payDay}\nNuevo saldo: ${soles(balance(c.id)+total)}\n\n¿Lo confirmas?`;
+  $("#waCard").style.display = "block"; $("#waCard").scrollIntoView({behavior:"smooth"});
+  cart = {}; renderAll();
+};
+$("#waOk").onclick = ()=>{ const e=ENTRIES.find(x=>x.id===pendingId); if(!e) return; e.confirmed=true; save(); $("#waCard").style.display="none"; toast("✓ Confirmado por el vecino. Entra al sello de hoy."); renderAll(); };
+$("#waNo").onclick = ()=>{ const e=ENTRIES.find(x=>x.id===pendingId); if(!e) return; e.rejected=true; save(); $("#waCard").style.display="none"; toast("Observado: el vecino no lo reconoce. No cuenta como deuda."); renderAll(); };
+
+$("#pay").onclick = ()=>{
+  const cents = Math.round(parseFloat($("#payAmt").value||"0")*100); if(!(cents>0)){ toast("Monto inválido"); return; }
+  const cid = $("#payCust").value; const t=today(); const id = "e"+(ENTRIES.reduce((m,e)=>Math.max(m,+e.id.slice(1)),0)+1);
+  ENTRIES.push({id, customer_id:cid, type:"payment", amount:cents, on:t, due:null, confirmed:true, note:$("#payMethod").value});
+  save(); $("#payAmt").value=""; toast(`Pago de ${soles(cents)} aplicado al fiado más antiguo`); renderAll();
+};
+
+// ---------- voice ("dos arroz y un aceite para Rosa") ----------
+const NUM = {un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10};
+function parseOrder(text){
+  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const words = t.split(/[^a-z0-9.]+/).filter(Boolean);
+  const found = {}; let qty = 1;
+  for(const w of words){
+    if(NUM[w]){ qty = NUM[w]; continue; }
+    if(/^\d+$/.test(w)){ qty = parseInt(w,10); continue; }
+    const p = PRODUCTS.find(p=>p.keys.some(k=>k.normalize("NFD").replace(/[̀-ͯ]/g,"")===w));
+    if(p){ found[p.id]=(found[p.id]||0)+qty; qty=1; }
+  }
+  const c = CUSTOMERS.find(c=>c.keys.some(k=>t.includes(k.normalize("NFD").replace(/[̀-ͯ]/g,""))));
+  return {items:found, customer:c};
+}
+function applyOrder(text){
+  const {items, customer} = parseOrder(text);
+  $("#heard").textContent = `Escuché: “${text}”`;
+  if(customer) $("#cust").value = customer.id;
+  for(const [id,q] of Object.entries(items)) cart[id]=(cart[id]||0)+q;
+  if(!Object.keys(items).length) toast("No reconocí productos; toca los botones");
+  renderChips();
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+$("#mic").onclick = ()=>{
+  if(!SR){ const t = prompt("Tu navegador no tiene dictado. Escribe el pedido:", "dos arroz y un aceite para Rosa"); if(t) applyOrder(t); return; }
+  const r = new SR(); r.lang="es-PE"; r.interimResults=false; r.maxAlternatives=1;
+  $("#mic").classList.add("live");
+  r.onresult = ev => applyOrder(ev.results[0][0].transcript);
+  r.onerror = ev => toast("Micrófono: "+ev.error);
+  r.onend = () => $("#mic").classList.remove("live");
+  r.start();
+};
+
+// ---------- renders ----------
+function renderToday(){
+  const t=today(); const es = ENTRIES.filter(e=>e.on===t).slice().reverse();
+  $("#today").innerHTML = es.length ? es.map(e=>{
+    const c = CUSTOMERS.find(x=>x.id===e.customer_id);
+    const st = e.rejected ? '<span class="tag bad">observado</span>' : e.confirmed ? '<span class="tag ok">confirmado</span>' : '<span class="tag wait">por confirmar</span>';
+    return `<div class="item"><div><b>${c.name}</b><div class="small muted">${e.type==="payment"?"Pago · "+e.note:e.note}</div></div><div style="text-align:right"><b>${e.type==="payment"?"−":""}${soles(e.amount)}</b><div>${st}</div></div></div>`;
+  }).join("") : '<div class="muted small">Sin movimientos hoy todavía.</div>';
+}
+function renderCustomers(){
+  $("#custList").innerHTML = CUSTOMERS.map(c=>{
+    const b = balance(c.id), lim = effectiveLimit(c), l = light(c.id);
+    const col = {ok:"var(--ok)",wait:"var(--warn)",bad:"var(--bad)"}[l];
+    return `<div class="item"><div><span class="dot" style="background:${col}"></span><b>${c.name}</b><div class="small muted">Paga: ${c.payDay} · límite ${soles(lim)}${lim>c.limit?' <span class="tag ok">↑ subió</span>':''}</div></div><b>${soles(b)}</b></div>`;
+  }).join("");
+}
+function renderDash(){
+  const rec = CUSTOMERS.reduce((s,c)=>s+Math.max(balance(c.id),0),0);
+  const t = today();
+  const sales = ENTRIES.filter(e=>e.type==="charge" && e.confirmed && daysBetween(e.on,t)<=30).reduce((s,e)=>s+e.amount,0);
+  const dso = sales>0 ? (rec/sales*30) : 0;
+  $("#kRec").textContent = soles(rec); $("#kSales").textContent = soles(sales);
+  $("#kDso").textContent = dso.toFixed(1)+" d"; $("#kDso").style.color = dso>30?"var(--bad)":dso>15?"var(--warn)":"var(--ok)";
+  const a = aging(); const max = Math.max(...Object.values(a),1);
+  const cols = {"0-7":"var(--ok)","8-15":"var(--accent2)","16-30":"var(--warn)","31-60":"var(--accent)","60+":"var(--bad)"};
+  $("#aging").innerHTML = Object.entries(a).map(([k,v])=>`<div class="bar"><span class="muted">${k}</span><div class="track"><i style="width:${v/max*100}%;background:${cols[k]}"></i></div><b style="text-align:right">${soles(v)}</b></div>`).join("");
+  $("#traffic").innerHTML = CUSTOMERS.slice().sort((x,y)=>worstDays(y.id)-worstDays(x.id)).map(c=>{
+    const l = light(c.id), d = worstDays(c.id);
+    const label = {ok:"al día",wait:`${d} días vencido`,bad:`${d} días vencido`}[l];
+    return `<div class="item"><div><span class="dot" style="background:${{ok:"var(--ok)",wait:"var(--warn)",bad:"var(--bad)"}[l]}"></span><b>${c.name}</b></div><span class="tag ${l}">${label}</span></div>`;
+  }).join("");
+}
+async function renderSeal(){
+  const t = today(); const {root,n} = await dailyRoot(t);
+  $("#sDay").textContent = t; $("#sN").textContent = n; $("#sRoot").textContent = root;
+  $("#sealList").innerHTML = SEALS.length ? SEALS.slice().reverse().map(s=>`<div class="item"><div><b>${s.day}</b> · ${s.n} mov.<div class="mono">${s.root.slice(0,24)}…</div></div><a href="https://explorer.solana.com/tx/${s.sig}?cluster=devnet" target="_blank" rel="noopener">ver ↗</a></div>`).join("") : '<div class="muted small">Aún no hay sellos.</div>';
+}
+function renderAll(){ renderChips(); renderToday(); renderCustomers(); renderDash(); renderSeal(); }
+
+// ---------- solana (devnet) ----------
+const W = window.solanaWeb3;
+const conn = W ? new W.Connection(RPC, "confirmed") : null;
+function wallet(){
+  let sk = store.get("wallet", null);
+  if(!sk){ const kp = W.Keypair.generate(); sk = Array.from(kp.secretKey); store.set("wallet", sk); }
+  return W.Keypair.fromSecretKey(Uint8Array.from(sk));
+}
+let KP = null;
+async function refreshBalance(){
+  if(!conn) return;
+  try{ const l = await conn.getBalance(KP.publicKey); $("#wBal").textContent = (l/W.LAMPORTS_PER_SOL).toFixed(4)+" SOL"; return l; }
+  catch(e){ $("#wBal").textContent = "sin conexión"; return 0; }
+}
+$("#airdrop").onclick = async ()=>{
+  toast("Pidiendo SOL de prueba…");
+  try{ const sig = await conn.requestAirdrop(KP.publicKey, 0.2*W.LAMPORTS_PER_SOL); await conn.confirmTransaction(sig,"confirmed"); toast("Listo: 0.2 SOL de devnet"); }
+  catch(e){ toast("El faucet está limitado. Usa faucet.solana.com con tu dirección.", 4500); }
+  refreshBalance();
+};
+$("#copyAddr").onclick = async ()=>{ try{ await navigator.clipboard.writeText(KP.publicKey.toBase58()); toast("Dirección copiada"); }catch{ toast(KP.publicKey.toBase58(), 6000); } };
+
+$("#doSeal").onclick = async ()=>{
+  if(!conn){ toast("No cargó la librería de Solana"); return; }
+  const t = today(); const {root,n} = await dailyRoot(t);
+  if(!n){ toast("No hay movimientos confirmados hoy"); return; }
+  const lamports = await refreshBalance();
+  if(lamports < 10000){ toast("Primero pide SOL de prueba para pagar la comisión", 3500); return; }
+  const memo = `ayllusol:v1|store:${STORE}|day:${t}|n:${n}|root:${root}`;
+  $("#doSeal").disabled = true; $("#doSeal").textContent = "Sellando…";
+  try{
+    const ix = new W.TransactionInstruction({keys:[{pubkey:KP.publicKey,isSigner:true,isWritable:false}], programId:new W.PublicKey(MEMO_PROGRAM), data:enc.encode(memo)});
+    const tx = new W.Transaction().add(ix);
+    const sig = await W.sendAndConfirmTransaction(conn, tx, [KP], {commitment:"confirmed"});
+    SEALS.push({day:t, n, root, sig}); store.set("seals", SEALS);
+    showSealResult(t, n, root, sig, null);
+    renderSeal(); refreshBalance();
+  }catch(e){ toast("Error al sellar: "+(e.message||e), 5000); }
+  $("#doSeal").disabled = false; $("#doSeal").textContent = "⛓ Sellar el día en Solana";
+};
+function showSealResult(day, n, root, sig, verified){
+  const o = $("#sealOut"); o.style.display="block";
+  o.innerHTML = `<div class="ok-big">⛓✓</div><b>Día ${day} sellado en Solana devnet</b>
+  <div class="small muted" style="margin:6px 0">${n} movimientos · raíz:</div><div class="mono">${root}</div>
+  <div class="small muted" style="margin-top:8px">Firma de la transacción:</div><div class="mono">${sig}</div>
+  <div class="row" style="gap:6px;margin-top:10px">
+    <a class="btn grow" href="https://explorer.solana.com/tx/${sig}?cluster=devnet" target="_blank" rel="noopener">Ver en el explorador ↗</a>
+    <button class="btn teal grow" id="verify">Verificar</button>
+  </div><div id="vres" class="small" style="margin-top:8px"></div>`;
+  $("#verify").onclick = () => verify(day, sig);
+  o.scrollIntoView({behavior:"smooth"});
+}
+async function verify(day, sig){
+  $("#vres").textContent = "Leyendo la transacción desde la cadena…";
+  try{
+    const tx = await conn.getTransaction(sig, {commitment:"confirmed", maxSupportedTransactionVersion:0});
+    const log = (tx?.meta?.logMessages||[]).join(" ");
+    const m = log.match(/root:([0-9a-f]{64})/);
+    const {root} = await dailyRoot(day);
+    if(m && m[1]===root) $("#vres").innerHTML = `<span class="tag ok">✓ coincide</span> La raíz en la cadena es igual a la que recalcula el cuaderno de hoy. Nadie lo cambió.`;
+    else if(m) $("#vres").innerHTML = `<span class="tag bad">✗ no coincide</span> El cuaderno cambió después del sello. En la cadena: ${m[1].slice(0,16)}…`;
+    else $("#vres").textContent = "No encontré la raíz en la transacción (aún propagándose, intenta en unos segundos).";
+  }catch(e){ $("#vres").textContent = "No se pudo leer: "+(e.message||e); }
+}
+
+// ---------- tabs / boot ----------
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.tab));
+  if(b.dataset.tab==="seal") refreshBalance();
+  window.scrollTo(0,0);
+});
+$("#reset").onclick = ev=>{ ev.preventDefault(); ENTRIES=seed(); SEALS=[]; save(); store.set("seals",[]); renderAll(); toast("Demo reiniciada"); };
+fillSelects();
+if(W){ KP = wallet(); $("#wAddr").textContent = KP.publicKey.toBase58(); }
+renderAll();
+</script>
+</body>
+</html>
