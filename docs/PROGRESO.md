@@ -7,6 +7,12 @@ Actualizado: 2026-10-12
 - Raíz Merkle del navegador verificada igual a la de Python (`apps/api/ayllusol_api/ledger.py`).
 - API FastAPI en memoria con 7 pruebas.
 
+## En rama `feat/catalog-voice` (no publicada hasta que termine la evaluación)
+- Pestaña Productos: agregar/editar/quitar con costo, precio y margen; registro por voz ("leche gloria tarro, costo tres cincuenta, precio cuatro treinta").
+- Importar catálogo desde Excel/CSV en el teléfono (los datos no se suben; nunca al repo).
+- Mostrador con buscador y productos más usados; voz usa el catálogo completo; pagos por voz ("Rosa pagó veinte soles con Yape").
+- Dashboard: margen bruto estimado del fiado (costo guardado en cada venta).
+
 ## Siguiente paso
 - Publicar GitHub Pages (Settings → Pages → main /docs) y grabar el video demo.
 
