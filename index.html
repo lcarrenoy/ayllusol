@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AylluSol — fiado ledger</title>
 <meta name="description" content="Digital fiado ledger for neighborhood stores, with daily proofs sealed on Solana devnet.">
 <meta name="theme-color" content="#0f1420">
+<meta name="google" content="notranslate">
 <style>
 :root{
 --bg:#0f1420; --panel:#171e2e; --panel2:#1f2840; --line:#2a3550;
@@ -410,7 +411,7 @@ return `<div class="item"><div><span class="dot" style="background:${{ok:"var(--
 async function renderSeal(){
 const t = today(); const {root,n} = await dailyRoot(t);
 $("#sDay").textContent = t; $("#sN").textContent = n; $("#sRoot").textContent = root;
-$("#sealList").innerHTML = SEALS.length ? SEALS.slice().reverse().map(s=>`<div class="item"><div><b>${s.day}</b> · ${s.n} mov.<div class="mono">${s.root.slice(0,24)}…</div></div><a href="https://explorer.solana.com/tx/${s.sig}?cluster=devnet" target="_blank" rel="noopener">ver ↗</a></div>`).join("") : '<div class="muted small">Aún no hay sellos.</div>';
+$("#sealList").innerHTML = SEALS.length ? SEALS.slice().reverse().map(s=>`<div class="item"><div><b>${s.day}</b> · ${s.n} mov.<div class="mono">${s.root.slice(0,24)}…</div></div>${s.pending?'<span class="tag wait">pendiente</span>':`<a href="https://explorer.solana.com/tx/${s.sig}?cluster=devnet" target="_blank" rel="noopener">ver ↗</a>`}</div>`).join("") : '<div class="muted small">Aún no hay sellos.</div>';
 }
 function renderAll(){ renderChips(); renderToday(); renderCustomers(); renderDash(); renderSeal(); }
 // ---------- solana (devnet) ----------
@@ -443,19 +444,58 @@ if(!conn){ toast("No cargó la librería de Solana"); return; }
 const t = today(); const {root,n} = await dailyRoot(t);
 if(!n){ toast("No hay movimientos confirmados hoy"); return; }
 const lamports = await refreshBalance();
-if(lamports < 10000){ toast("Primero pide SOL de prueba para pagar la comisión", 3500); return; }
+if(lamports < 10000){ await signOffline(t, n, root); return; }
 const memo = `ayllusol:v1|store:${STORE}|day:${t}|n:${n}|root:${root}`;
 $("#doSeal").disabled = true; $("#doSeal").textContent = "Sellando…";
 try{
 const ix = new W.TransactionInstruction({keys:[{pubkey:KP.publicKey,isSigner:true,isWritable:false}], programId:new W.PublicKey(MEMO_PROGRAM), data:enc.encode(memo)});
 const tx = new W.Transaction().add(ix);
 const sig = await W.sendAndConfirmTransaction(conn, tx, [KP], {commitment:"confirmed"});
-SEALS.push({day:t, n, root, sig}); store.set("seals", SEALS);
+SEALS = SEALS.filter(s=>!(s.day===t && s.pending)); SEALS.push({day:t, n, root, sig}); store.set("seals", SEALS);
 showSealResult(t, n, root, sig, null);
 renderSeal(); refreshBalance();
 }catch(e){ toast("Error al sellar: "+(e.message||e), 5000); }
 $("#doSeal").disabled = false; $("#doSeal").textContent = "⛓ Sellar el día en Solana";
 };
+function b58(bytes){
+const A="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; let n=0n;
+for(const b of bytes) n=n*256n+BigInt(b);
+let out=""; while(n>0n){ out=A[Number(n%58n)]+out; n/=58n; }
+for(const b of bytes){ if(b===0) out="1"+out; else break; }
+return out;
+}
+function memoTx(memo, blockhash){
+const ix = new W.TransactionInstruction({keys:[{pubkey:KP.publicKey,isSigner:true,isWritable:false}], programId:new W.PublicKey(MEMO_PROGRAM), data:enc.encode(memo)});
+const tx = new W.Transaction({feePayer:KP.publicKey, recentBlockhash:blockhash}).add(ix);
+tx.sign(KP); return tx;
+}
+async function signOffline(day, n, root){
+// No devnet SOL to pay the fee: sign the exact Solana transaction now, broadcast later.
+const memo = `ayllusol:v1|store:${STORE}|day:${day}|n:${n}|root:${root}`;
+let bh = "11111111111111111111111111111111";
+try{ bh = (await conn.getLatestBlockhash()).blockhash; }catch(e){}
+const tx = memoTx(memo, bh);
+const sig = b58(tx.signature);
+SEALS = SEALS.filter(s=>!(s.day===day && s.pending));
+SEALS.push({day, n, root, sig, pending:true}); store.set("seals", SEALS);
+const o = $("#sealOut"); o.style.display="block";
+o.innerHTML = `<div class="ok-big">✍️</div><b>Día ${day} firmado por la bodega</b>
+<div class="small muted" style="margin:6px 0">${n} movimientos · raíz:</div><div class="mono">${root}</div>
+<div class="small muted" style="margin-top:8px">Firma ed25519 de la transacción Solana:</div><div class="mono">${sig}</div>
+<div class="small" style="margin-top:8px"><span class="tag wait">pendiente de enviar</span> La billetera no tiene SOL de devnet para la comisión. Se publica en la cadena apenas haya saldo.</div>
+<div class="row" style="gap:6px;margin-top:10px">
+<button class="btn teal grow" id="verifySig">Verificar firma</button>
+<button class="btn grow" id="retry">Enviar a Solana</button>
+</div><div id="vres" class="small" style="margin-top:8px"></div>`;
+$("#verifySig").onclick = async ()=>{
+const {root:now} = await dailyRoot(day);
+const okSig = tx.verifySignatures();
+const okRoot = now===root;
+$("#vres").innerHTML = okSig && okRoot ? `<span class="tag ok">✓ firma válida</span> La firma corresponde a la llave de la bodega y la raíz coincide con el cuaderno de hoy.` : !okRoot ? `<span class="tag bad">✗ no coincide</span> El cuaderno cambió después de firmar.` : `<span class="tag bad">✗ firma inválida</span>`;
+};
+$("#retry").onclick = ()=> $("#doSeal").click();
+renderSeal(); o.scrollIntoView({behavior:"smooth"});
+}
 function showSealResult(day, n, root, sig, verified){
 const o = $("#sealOut"); o.style.display="block";
 o.innerHTML = `<div class="ok-big">⛓✓</div><b>Día ${day} sellado en Solana devnet</b>
