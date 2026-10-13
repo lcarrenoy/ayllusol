@@ -37,11 +37,10 @@ Memo format: `ayllusol:v1|store:<id>|day:<YYYY-MM-DD>|n:<entries>|root:<sha256 h
 ## Repository
 
 ```
-index.html + web3.min.js   Mobile web app (GitHub Pages) — counter, dashboard, Solana seal
-ayllusol-source.zip  Full source: Python ledger core + FastAPI + tests, Anchor plan
-apps/api/            Python ledger core + FastAPI (balances, FIFO aging, DSO, Merkle root) with tests
+index.html              Mobile web app (GitHub Pages) — counter, dashboard, Solana devnet seal
+apps/api/               Python ledger core + FastAPI (balances, FIFO aging, DSO, Merkle root) with tests
 programs/ayllu_ledger/  Planned Anchor program (seal_day PDA per store/day) — next step
-docs/PROGRESO.md     Progress log
+docs/PROGRESO.md        Progress log
 ```
 
 The web app and the Python core use the **same hashing and Merkle algorithm** (sorted leaves,
