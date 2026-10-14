@@ -1,9 +1,6 @@
 from datetime import date
 from decimal import Decimal as D
 
-from fastapi.testclient import TestClient
-
-from ayllusol_api import main
 from ayllusol_api.ledger import Entry, EntryType, aging, balance, daily_root, dso, merkle_root
 
 T = EntryType
@@ -48,9 +45,7 @@ def test_daily_root_only_seals_confirmed():
     assert n == 1
 
 
-def test_api_flow_limit_confirm_and_portfolio():
-    main.CUSTOMERS.clear(); main.ENTRIES.clear()
-    api = TestClient(main.app)
+def test_api_flow_limit_confirm_and_portfolio(api):
     rosa = api.post("/customers", json={"name": "Rosa (demo)", "credit_limit": "80"}).json()
     r = api.post("/charges", json={"customer_id": rosa["id"], "amount": "45", "on": "2026-10-10"})
     assert r.status_code == 200
